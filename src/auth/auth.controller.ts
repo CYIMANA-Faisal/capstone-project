@@ -11,13 +11,11 @@ import {
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
-  ApiCookieAuth,
   ApiCreatedResponse,
   ApiExtraModels,
   ApiNotFoundResponse,
   ApiQuery,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../shared/filters/http-exception.filter';
 import { CreateUserDto } from './../users/dto/create-user.dto';
