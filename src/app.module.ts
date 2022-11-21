@@ -1,4 +1,3 @@
-
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { runtimeConfig } from './shared/config/app.config';
@@ -10,8 +9,10 @@ import { ClassTransformInterceptor } from './shared/interceptors/class-transform
 import { ResponseTransformInterceptor } from './shared/interceptors/response-transform.interceptor';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { BcryptService } from './shared/util/bcrypt.service';
-
+import { Module, OnApplicationBootstrap } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -34,47 +35,22 @@ import { BcryptService } from './shared/util/bcrypt.service';
     { provide: APP_INTERCEPTOR, useClass: ResponseTransformInterceptor },
     { provide: APP_INTERCEPTOR, useClass: ClassTransformInterceptor },
     AppService,
-    UserSeedService,
-    SpecializationPreferenceSeedService,
-    EducationPreferenceSeedService,
-    LanguagePreferenceSeedService,
-    GradingPreferenceSeedService,
-    OpportunityTypePreferenceSeedService,
-    EmploymentStatusPreferenceSeedService,
-    AssessmentRequestSeedService,
-    AssessmentSeedService,
-    GradesSeedService,
-    BcryptService,
-    InterestPreferenceSeedService,
-    ProgramPreferenceSeedService,
+    // UserSeedService,
   ],
 })
 export class AppModule implements OnApplicationBootstrap {
-  constructor(
-    private readonly userSeedService: UserSeedService,
-    private readonly educationSeedService: EducationPreferenceSeedService,
-    private readonly specializationSeedService: SpecializationPreferenceSeedService,
-    private readonly languageSeedService: LanguagePreferenceSeedService,
-    private readonly gradingSeedService: GradingPreferenceSeedService,
-    private readonly opportunityTypePreferenceSeedService: OpportunityTypePreferenceSeedService,
-    private readonly employmentStatusSeedService: EmploymentStatusPreferenceSeedService,
-    private readonly gradesSeedService: GradesSeedService,
-    private readonly assessmentSeedService: AssessmentSeedService,
-    private readonly assessmentRequestSeedService: AssessmentRequestSeedService,
-    private readonly interestPreferenceSeedService: InterestPreferenceSeedService,
-    private readonly programPreferenceSeedService: ProgramPreferenceSeedService,
-  ) {}
+  //constructor() {} // private readonly programPreferenceSeedService: ProgramPreferenceSeedService, // private readonly interestPreferenceSeedService: InterestPreferenceSeedService, // private readonly assessmentRequestSeedService: AssessmentRequestSeedService, // private readonly assessmentSeedService: AssessmentSeedService, // private readonly gradesSeedService: GradesSeedService, // private readonly employmentStatusSeedService: EmploymentStatusPreferenceSeedService, // private readonly opportunityTypePreferenceSeedService: OpportunityTypePreferenceSeedService, // private readonly gradingSeedService: GradingPreferenceSeedService, // private readonly languageSeedService: LanguagePreferenceSeedService, // private readonly specializationSeedService: SpecializationPreferenceSeedService, // private readonly educationSeedService: EducationPreferenceSeedService, // private readonly userSeedService: UserSeedService,
   async onApplicationBootstrap() {
-    await this.userSeedService.seed();
-    await this.educationSeedService.seed();
-    await this.languageSeedService.seed();
-    await this.specializationSeedService.seed();
-    await this.gradingSeedService.seed();
-    await this.opportunityTypePreferenceSeedService.seed();
-    await this.employmentStatusSeedService.seed();
-    await this.assessmentSeedService.seed();
-    await this.assessmentRequestSeedService.seed();
-    await this.interestPreferenceSeedService.seed();
-    await this.programPreferenceSeedService.seed();
+    // await this.userSeedService.seed();
+    // await this.educationSeedService.seed();
+    // await this.languageSeedService.seed();
+    // await this.specializationSeedService.seed();
+    // await this.gradingSeedService.seed();
+    // await this.opportunityTypePreferenceSeedService.seed();
+    // await this.employmentStatusSeedService.seed();
+    // await this.assessmentSeedService.seed();
+    // await this.assessmentRequestSeedService.seed();
+    // await this.interestPreferenceSeedService.seed();
+    // await this.programPreferenceSeedService.seed();
   }
 }
