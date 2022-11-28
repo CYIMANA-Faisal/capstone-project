@@ -7,6 +7,7 @@ import {
   Matches,
   MinLength,
 } from 'class-validator';
+import { VerifyBy } from 'src/shared/enums/verify.enum';
 import { Gender } from './../../shared/enums/gender.enum';
 
 export class CreateUserDto {
@@ -44,4 +45,9 @@ export class CreateUserDto {
   @IsString()
   @MinLength(13)
   phoneNumber: string;
+  
+  @ApiProperty()
+  @IsEnum(VerifyBy)
+  @IsNotEmpty()
+  verifyBy: VerifyBy;
 }
