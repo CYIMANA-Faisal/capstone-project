@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEmail,
   IsEnum,
   IsNotEmpty,
@@ -50,4 +51,6 @@ export class CreateUserDto {
   @IsEnum(VerifyBy)
   @IsNotEmpty()
   verifyBy: VerifyBy;
+
+  
 }

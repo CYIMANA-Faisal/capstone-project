@@ -6,4 +6,5 @@ export class AccountVerificationDto {
   @IsString()
   @IsNotEmpty()
   verificationCode: string;
+  
 }
