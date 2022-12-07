@@ -26,7 +26,6 @@ import { AuthService } from './auth.service';
 import { GenericResponse } from '../shared/interface/generic-response.interface';
 import { User } from '../users/entities/user.entity';
 import { getGenericResponseSchema } from '../shared/util/swagger.util';
-import { VerificationCode } from './entities/verification-code.entities';
 import { AccountVerificationDto } from './dto/account-verification.dto';
 import { RequestVerificationCode } from './dto/request-verification-code.dto';
 
@@ -54,7 +53,7 @@ export class AuthController {
       results: result,
     };
   }
-  @ApiCreatedResponse({
+/*  @ApiCreatedResponse({
     description: 'Verification code sent',
     ...getGenericResponseSchema(),
   })
@@ -87,5 +86,5 @@ export class AuthController {
   @Post('/test')
   test():string{
     return "test";
-  }
+  }*/
 }

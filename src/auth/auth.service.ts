@@ -19,18 +19,19 @@ import { codeGenerator } from 'src/shared/util/code-generator';
 import { addDays, formatISO, isBefore } from 'date-fns';
 import { VerifyBy } from 'src/shared/enums/verify.enum';
 import { ACCOUNT_ALREADY_VERIFIED, INVALID_VERIFICATION_CODE, VERIFICATION_CODE_EXPIRED, VERIFICATION_EMAIL_SUBJECT } from 'src/shared/constants/auth.constants';
-import { VerificationCode } from './entities/verification-code.entities';
+
 import { TokenPayload } from './interfaces/jwt.payload.interface';
 import { USER_NOT_FOUND } from 'src/shared/constants/user.constants';
 import { EMAIL_REGEX } from 'src/shared/constants/regex.constant';
+import { Code } from 'src/users/entities/code.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(VerificationCode)
-    private readonly verificationCodeRepository: Repository<VerificationCode>,
+    @InjectRepository(Code)
+    private readonly verificationCodeRepository: Repository<Code>,
    private readonly jwtService: JwtService,
     private readonly sendGridService: SendGrindService,
     //private readonly connection: Connection,
@@ -42,6 +43,7 @@ export class AuthService {
   async registrUser(user: CreateUserDto): Promise<any>{
     user.password = await this.bcryptService.hash(user.password);
     if(! await this.checkUserExisting(user.email)){
+     if(await this.bcryptService.compare(user.confirmPassword,user.password)){
       const createdUser = await this.userRepository.save(user)
       const verificationCode: string = codeGenerator();
       const verificationCodeEntry = {
@@ -56,23 +58,35 @@ export class AuthService {
         verificationCodeEntry,
       );
       if (user.verifyBy === VerifyBy.EMAIL) {
-        const body : string="Hello "+user.firstName+" Please verify your account by entering this code: "+userVerificationCode.code
+        const body : string="Hello "+user.first_name+" Please verify your account by entering this code: "+userVerificationCode.code
         const verificationMail = {
           to: user.email,
           subject: VERIFICATION_EMAIL_SUBJECT,
           from: this.configService.get<string>('SENT_EMAIL_FROM'),
           text:body,
-          html: "<h1>"+body+"</h2>",
+          html: "<h1>"+body+"</h1>",
         };
         await this.sendGridService.send(verificationMail);
         return "Verification code sent to your email";
       }
       return omit(createdUser, ['password'])
-    }else{
+     }else{
+      throw new ConflictException("passwords don't match");
+     }
+       }else{
       throw new ConflictException('User already exist.')
     }
   }
-   async requestVerification(
+  async checkUserExisting(email: string): Promise<boolean>{
+    const user = await this.userRepository.findOne({email: email});
+    //console.log(user)
+    if (user) {
+      return true
+    } else {
+      return false
+    }
+  }
+   /*async requestVerification(
       emailorPhone:string
     ): Promise<void> {
       
@@ -204,16 +218,8 @@ export class AuthService {
       return true;
     }
     return false;
-  }
-  async checkUserExisting(email: string): Promise<boolean>{
-    const user = await this.userRepository.findOne({email: email});
-    console.log(user)
-    if (user) {
-      return true
-    } else {
-      return false
-    }
-  }
+  }*/
+  
   
   
   async checkIfRefreshTokenMatching(

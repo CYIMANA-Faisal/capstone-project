@@ -1,7 +1,7 @@
 export const SUCCESS_SIGNUP =
   'Signed-up successfully. Please check your phone or email to verify your account';
 export const SUCCESS_LOGIN = 'Login successfully';
-export const VERIFICATION_EMAIL_SUBJECT = 'capstone account verification';
+export const VERIFICATION_EMAIL_SUBJECT = 'HR account verification';
 export const VERIFICATION_CODE_EXPIRED = 'Your verification code has expired';
 export const INVALID_VERIFICATION_CODE =
   'Invalid Code or your account is already verified';
