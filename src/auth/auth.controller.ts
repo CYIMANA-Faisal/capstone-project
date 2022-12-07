@@ -9,6 +9,7 @@ import {
   Query,
   Res,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -28,6 +29,8 @@ import { User } from '../users/entities/user.entity';
 import { getGenericResponseSchema } from '../shared/util/swagger.util';
 import { AccountVerificationDto } from './dto/account-verification.dto';
 import { RequestVerificationCode } from './dto/request-verification-code.dto';
+import { LoginDto } from './dto/login.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -53,14 +56,14 @@ export class AuthController {
       results: result,
     };
   }
-/*  @ApiCreatedResponse({
+  @ApiCreatedResponse({
     description: 'Verification code sent',
     ...getGenericResponseSchema(),
   })
   @ApiNotFoundResponse({ description: 'No email or phone found' })
   @ApiBadRequestResponse({ description: 'Bad request' })
   @HttpCode(HttpStatus.CREATED)
-  @Post('/request-verification-code')
+  @Post('/requestVerCode')
   async requestVerification(
     @Body() requestVerificationCodeDto: RequestVerificationCode,
   ): Promise<GenericResponse<string>> {
@@ -82,9 +85,22 @@ export class AuthController {
     
     return {message:'Account verified successfully',results:''};
   }
+  @ApiCreatedResponse({
+    description: 'Registered successfully',
+    ...getGenericResponseSchema(User),
+  })
+  @ApiExtraModels(User)
+  @ApiConflictResponse({ description: 'User logged in successfully' })
+  @ApiBadRequestResponse({ description: 'Bad request' })
   @HttpCode(HttpStatus.OK)
-  @Post('/test')
-  test():string{
-    return "test";
-  }*/
+
+  @Post('/login')
+  async login(
+   @Body() loginDto:LoginDto
+  ): Promise<GenericResponse<any>> {
+    const result =await this.authService.userLogin(loginDto.password,loginDto.email);
+     return {message:'logged in successfully',
+    results:{refreshToken:result.refreshToken,user:result.user}
+  };
+    }
 }

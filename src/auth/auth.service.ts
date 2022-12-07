@@ -24,6 +24,8 @@ import { TokenPayload } from './interfaces/jwt.payload.interface';
 import { USER_NOT_FOUND } from 'src/shared/constants/user.constants';
 import { EMAIL_REGEX } from 'src/shared/constants/regex.constant';
 import { Code } from 'src/users/entities/code.entity';
+import { use } from 'passport';
+
 
 @Injectable()
 export class AuthService {
@@ -69,7 +71,7 @@ export class AuthService {
         await this.sendGridService.send(verificationMail);
         return "Verification code sent to your email";
       }
-      return omit(createdUser, ['password'])
+      //return omit(createdUser, ['password'])
      }else{
       throw new ConflictException("passwords don't match");
      }
@@ -86,7 +88,7 @@ export class AuthService {
       return false
     }
   }
-   /*async requestVerification(
+   async requestVerification(
       emailorPhone:string
     ): Promise<void> {
       
@@ -109,7 +111,7 @@ export class AuthService {
         verificationCodeEntry,
       );
       if (this.checkDataIsEmail(emailorPhone)) {
-         const body : string="Hello "+user.firstName+", Please verify your account by entering this code: "+verificationCode.code
+         const body : string="Hello "+user.first_name+", Please verify your account by entering this code: "+verificationCode.code
         const verificationMail = {
           to: user.email,
           subject: VERIFICATION_EMAIL_SUBJECT,
@@ -137,7 +139,7 @@ export class AuthService {
       }
       if (this.checkDataIsPhone(emailorPhone)) {
         user = await this.userRepository.findOne({
-          phoneNumber: emailorPhone,
+          phone_number: emailorPhone,
         });
       }
       return user;
@@ -177,23 +179,23 @@ export class AuthService {
     await this.verificationCodeRepository.delete({
       id: result.id,
     });
-    const accessToken = this.getJwtAccessToken(
-      result.user.id, result.user.email,
-      result.user.firstName,
-    );
-    const refreshToken = this.getJwtRefreshToken(
-      result.user.id, result.user.email,
-      result.user.firstName,
-    );
+    /* const accessToken = this.getJwtAccessToken(
+    user.id, user.email,
+    user.first_name,user.last_name,user.manager_id,
+  );
+  const refreshToken = this.getJwtRefreshToken(
+    user.id, user.email,
+    user.first_name,user.last_name,user.manager_id,
+  );*/
     return {
-      accessToken,
-      refreshToken,
+     // accessToken,
+     // refreshToken,
       user: omit(result.user, ['password', 'currentHashedRefreshToken']),
     };
    
   }
-  public getJwtAccessToken(userId:number,userEmail: string, firstName: string): string {
-    const payload = { id: userId, fName: firstName };
+  public getJwtAccessToken(userId:number,userEmail: string): string {
+    const payload= { username:userEmail,sub:userId};
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
       expiresIn: this.configService.get<string>(
@@ -203,8 +205,8 @@ export class AuthService {
     return token;
   }
 
-  public getJwtRefreshToken(userId:number,userEmail: string, firstName: string): string {
-    const payload= { id: userId, email:userEmail,fName: firstName};
+  public getJwtRefreshToken(userId:number,userEmail: string): string {
+    const payload= { username:userEmail,sub:userId};
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
       expiresIn: this.configService.get<string>(
@@ -213,12 +215,12 @@ export class AuthService {
     });
     return refreshToken;
   }
-  async checkCodeExpiry(data: VerificationCode): Promise<boolean> {
+  async checkCodeExpiry(data: Code): Promise<boolean> {
     if (isBefore(new Date(), new Date(data.expiryDate))) {
       return true;
     }
     return false;
-  }*/
+  }
   
   
   
@@ -232,4 +234,56 @@ export class AuthService {
     );
     return isRefreshTokenMatching;
   }
+  async userLogin(password:string,email:string){
+const user=await this.userRepository.findOne({ where: { email: email},});
+if(user){
+
+  if((await this.bcryptService.compare(password,user.password))&&email===user.email){
+if(user.isVerified==true){
+if(user.active==true){
+  const accessToken = this.getJwtAccessToken(
+    user.id, user.email,
+    
+  );
+  const refreshToken = this.getJwtRefreshToken(
+    user.id, user.email,
+ 
+  );
+  await this.setCurrentHashedRefreshToken(refreshToken,user.id);
+  const result = {
+    accessToken,
+    refreshToken,
+    user: omit(user, ['password', 'currentHashedRefreshToken']),
+  };
+  return result;
+}else{
+  throw new ConflictException('User is not active');
 }
+}else{
+  throw new ConflictException('user not verified, please request a verification code');
+}
+  }else{
+    throw new ConflictException('check your username and password');
+  }
+}else{
+  throw new ConflictException('User not found');
+}
+
+    /*
+if(){*/
+
+}
+async setCurrentHashedRefreshToken(refreshToken:string, id:number){
+const hashedRefreshToken=await this.bcryptService.hash(refreshToken);
+await this.userRepository.update({id:id},{currentHashedRefreshToken:hashedRefreshToken});
+
+}
+  }
+  /*async forgotPassword(user:CreateUserDto):Promise<any>{
+    user.password=await this.bcryptService.hash(user.password)
+    await this.userRepository.update(
+      { id:inToken},
+      { password: user.password },
+    );
+  }*/
+

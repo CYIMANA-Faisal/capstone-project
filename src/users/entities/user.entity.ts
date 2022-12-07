@@ -12,6 +12,7 @@ import Audit from '../../shared/interface/audit.entity';
 import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
+
 @Entity()
 export class User extends Audit {
   @ApiProperty()
@@ -43,11 +44,18 @@ export class User extends Audit {
 
   @OneToMany(() => User, (user) => user.manager_id)
   manager_id: number;
+
   @ApiProperty()
   @Column({ default: false, nullable: true })
   active: boolean;
 
+  @ApiProperty()
+  @Column({ default: false, nullable: false })
+  isVerified:boolean
+
   @Column({ nullable: true })
   @Exclude()
   public currentHashedRefreshToken?: string;
+
+  
 }
