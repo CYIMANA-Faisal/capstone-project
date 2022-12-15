@@ -1,5 +1,11 @@
 import { UserRole } from './../../shared/enums/user-roles.enum';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import Audit from '../../shared/interface/audit.entity';
 import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -33,8 +39,14 @@ export class User extends Audit {
   @Column({ default: UserRole.STANDARD, nullable: false })
   role: UserRole;
 
-  @OneToMany(() => User, (user) => user.manager_id)
-  manager_id: number;
+  @ManyToOne(() => User, (user) => user.employee, {
+    onDelete: 'SET NULL',
+    onUpdate: 'SET NULL',
+  })
+  manager: User;
+
+  @OneToMany(() => User, (user) => user.manager)
+  employee: User[];
 
   @ApiProperty()
   @Column({ default: false, nullable: true })
@@ -42,7 +54,7 @@ export class User extends Audit {
 
   @ApiProperty()
   @Column({ default: false, nullable: false })
-  isVerified:boolean
+  isVerified: boolean;
 
   @Column({ nullable: true })
   @Exclude()

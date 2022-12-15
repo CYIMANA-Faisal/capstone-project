@@ -47,12 +47,12 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Bad request' })
   @HttpCode(HttpStatus.CREATED)
   @Post('/register')
-  async registerCandidate(
+  async registerUser(
     @Body() createUserDto: CreateUserDto,
   ): Promise<GenericResponse<void>> {
-    const result =await this.authService.registrUser(createUserDto)
+    const result = await this.authService.registerUser(createUserDto);
     return {
-      message: "User registered successfully",
+      message: 'User registered successfully',
       results: result,
     };
   }
@@ -67,7 +67,9 @@ export class AuthController {
   async requestVerification(
     @Body() requestVerificationCodeDto: RequestVerificationCode,
   ): Promise<GenericResponse<string>> {
-    await this.authService.requestVerification(requestVerificationCodeDto.emailOrPhone);
+    await this.authService.requestVerification(
+      requestVerificationCodeDto.emailOrPhone,
+    );
     return { message: 'Verification code sent', results: '' };
   }
   @ApiCreatedResponse({
@@ -79,11 +81,14 @@ export class AuthController {
   @ApiQuery({ name: 'code' })
   @HttpCode(HttpStatus.OK)
   @Get('/verify')
-  async verification(@Query() verCode:AccountVerificationDto
-    ): Promise<GenericResponse<string>>{
-    const results = await this.authService.verification(verCode.verificationCode);
-    
-    return {message:'Account verified successfully',results:''};
+  async verification(
+    @Query() verCode: AccountVerificationDto,
+  ): Promise<GenericResponse<string>> {
+    const results = await this.authService.verification(
+      verCode.verificationCode,
+    );
+
+    return { message: 'Account verified successfully', results: '' };
   }
   @ApiCreatedResponse({
     description: 'Registered successfully',
@@ -93,14 +98,15 @@ export class AuthController {
   @ApiConflictResponse({ description: 'User logged in successfully' })
   @ApiBadRequestResponse({ description: 'Bad request' })
   @HttpCode(HttpStatus.OK)
-
   @Post('/login')
-  async login(
-   @Body() loginDto:LoginDto
-  ): Promise<GenericResponse<any>> {
-    const result =await this.authService.userLogin(loginDto.password,loginDto.email);
-     return {message:'logged in successfully',
-    results:{refreshToken:result.refreshToken,user:result.user}
-  };
-    }
+  async login(@Body() loginDto: LoginDto): Promise<GenericResponse<any>> {
+    const result = await this.authService.userLogin(
+      loginDto.password,
+      loginDto.email,
+    );
+    return {
+      message: 'logged in successfully',
+      results: { refreshToken: result.refreshToken, user: result.user },
+    };
+  }
 }
