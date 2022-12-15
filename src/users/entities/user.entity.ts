@@ -1,17 +1,8 @@
-import { Gender } from './../../shared/enums/gender.enum';
 import { UserRole } from './../../shared/enums/user-roles.enum';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  OneToMany,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import Audit from '../../shared/interface/audit.entity';
 import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-
 
 @Entity()
 export class User extends Audit {
@@ -27,7 +18,7 @@ export class User extends Audit {
   password: string;
 
   @ApiProperty()
-  @Column({ name: "first_name" })
+  @Column({ name: 'first_name' })
   first_name: string;
 
   @ApiProperty()
@@ -56,6 +47,4 @@ export class User extends Audit {
   @Column({ nullable: true })
   @Exclude()
   public currentHashedRefreshToken?: string;
-
-  
 }
