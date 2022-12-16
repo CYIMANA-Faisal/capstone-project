@@ -20,9 +20,14 @@ import { addDays, formatISO, isBefore } from 'date-fns';
 import { VerifyBy } from 'src/shared/enums/verify.enum';
 import {
   ACCOUNT_ALREADY_VERIFIED,
+  ACCOUNT_IN_DORMANT_MODE,
+  INVALID_CREDENTIAL,
   INVALID_VERIFICATION_CODE,
+  NO_ACCESS_TO_THE_PORTAL,
+  UNVERIFIED_ACCOUNT,
   VERIFICATION_CODE_EXPIRED,
   VERIFICATION_EMAIL_SUBJECT,
+  YOU_CAN_LOGIN_WITH_EITHER_EMAIL_OR_PHONE_NUMBER,
 } from 'src/shared/constants/auth.constants';
 
 import { TokenPayload } from './interfaces/jwt.payload.interface';
@@ -30,6 +35,7 @@ import { USER_NOT_FOUND } from 'src/shared/constants/user.constants';
 import { EMAIL_REGEX } from 'src/shared/constants/regex.constant';
 import { Code } from 'src/users/entities/code.entity';
 import { UserRole } from '../shared/enums/user-roles.enum';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -230,41 +236,87 @@ export class AuthService {
     );
     return isRefreshTokenMatching;
   }
-  async userLogin(password: string, email: string) {
-    const user = await this.userRepository.findOne({ where: { email: email } });
+  async adminLogin(password: string, email: string) {
+    const user = await this.findUserByEmailOrPhoneNumber(email);
     if (user) {
       if (
-        (await this.bcryptService.compare(password, user.password)) &&
-        email === user.email
+        ((await this.bcryptService.compare(password, user.password)) &&
+        email === user.email) || ((await this.bcryptService.compare(password, user.password)) &&
+        email === user.phone_number) 
       ) {
-        if (user.isVerified == true) {
-          if (user.active == true) {
-            const accessToken = this.getJwtAccessToken(user.id, user.email);
-            const refreshToken = this.getJwtRefreshToken(user.id, user.email);
-            await this.setCurrentHashedRefreshToken(refreshToken, user.id);
-            const result = {
-              accessToken,
-              refreshToken,
-              user: omit(user, ['password', 'currentHashedRefreshToken']),
-            };
-            return result;
-          } else {
-            throw new ConflictException('User is not active');
+        if (user.isVerified) {
+          if (user.active ) {
+            if(user.role==UserRole.ADMIN){
+              const accessToken = this.getJwtAccessToken(user.id, user.email);
+              const refreshToken = this.getJwtRefreshToken(user.id, user.email);
+              await this.setCurrentHashedRefreshToken(refreshToken, user.id);
+              const result = {
+                accessToken,
+                refreshToken,
+                user: omit(user, ['password', 'currentHashedRefreshToken']),
+              };
+              return result;
+            }else{
+              throw new ConflictException(
+                NO_ACCESS_TO_THE_PORTAL
+              );
+            }
+             } else {
+            throw new ConflictException(ACCOUNT_IN_DORMANT_MODE);
           }
         } else {
           throw new ConflictException(
-            'user not verified, please request a verification code',
+            UNVERIFIED_ACCOUNT
           );
         }
       } else {
-        throw new ConflictException('check your username and password');
+        throw new ConflictException(INVALID_CREDENTIAL);
       }
     } else {
-      throw new ConflictException('User not found');
+      throw new ConflictException(YOU_CAN_LOGIN_WITH_EITHER_EMAIL_OR_PHONE_NUMBER 
+        );
     }
-
-    /*
-if(){*/
+  }
+  async standardUserLogin(password: string, email: string) {
+    const user = await this.findUserByEmailOrPhoneNumber(email);
+    if (user) {
+      if (
+        ((await this.bcryptService.compare(password, user.password)) &&
+        email === user.email) || ((await this.bcryptService.compare(password, user.password)) &&
+        email === user.phone_number) 
+      ) {
+        if (user.isVerified) {
+          if (user.active ) {
+            if(user.role==UserRole.STANDARD){
+              const accessToken = this.getJwtAccessToken(user.id, user.email);
+              const refreshToken = this.getJwtRefreshToken(user.id, user.email);
+              await this.setCurrentHashedRefreshToken(refreshToken, user.id);
+              const result = {
+                accessToken,
+                refreshToken,
+                user: omit(user, ['password', 'currentHashedRefreshToken']),
+              };
+              return result;
+            }else{
+              throw new ConflictException(
+                NO_ACCESS_TO_THE_PORTAL
+              );
+            }
+             } else {
+            throw new ConflictException(ACCOUNT_IN_DORMANT_MODE);
+          }
+        } else {
+          throw new ConflictException(
+            UNVERIFIED_ACCOUNT
+          );
+        }
+      } else {
+        throw new ConflictException(INVALID_CREDENTIAL);
+      }
+    } else {
+      throw new ConflictException(YOU_CAN_LOGIN_WITH_EITHER_EMAIL_OR_PHONE_NUMBER 
+        );
+    }
   }
   async setCurrentHashedRefreshToken(refreshToken: string, id: number) {
     const hashedRefreshToken = await this.bcryptService.hash(refreshToken);
@@ -273,11 +325,36 @@ if(){*/
       { currentHashedRefreshToken: hashedRefreshToken },
     );
   }
+  async changePassword(userToUpdate:User,psdDto:ChangePasswordDto):Promise<any>{
+    psdDto.newPassword=await this.bcryptService.hash(psdDto.newPassword);
+   const user = await this.userRepository.findOne({ id: userToUpdate.id});
+    if(await this.bcryptService.compare(psdDto.currentPassword,userToUpdate.password)){
+      if(!(psdDto.currentPassword===psdDto.newPassword)){
+        const updateduser=  await this.userRepository.update(
+          {id: user.id},
+          { password: psdDto.newPassword},
+        );
+        return  {user: omit(updateduser, ['password', 'currentHashedRefreshToken'])}
+      }else{
+        throw new ConflictException("The current and new passwords can't match" );
+       }
+    }else{
+      throw new ConflictException("The current and existing passwords don't match" );
+       }
+    }
+    async findAllUsers():Promise<any>{
+      const users=await this.userRepository.find();
+    /*  for(let i=0;i<users.length;i++){
+        return{firstName:users[i].first_name,
+          lastName:users[i].last_name,
+          email:users[i].email,
+          phoneNumber:users[i].phone_number,
+          isActive:users[i].active,
+          isVerified:users[i].isVerified,
+        };
+      }*/
+      return{users};
+    }
+   
 }
-/*async forgotPassword(user:CreateUserDto):Promise<any>{
-    user.password=await this.bcryptService.hash(user.password)
-    await this.userRepository.update(
-      { id:inToken},
-      { password: user.password },
-    );
-  }*/
+
