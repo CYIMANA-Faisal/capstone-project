@@ -1,11 +1,9 @@
-import { Gender } from './../../shared/enums/gender.enum';
 import { UserRole } from './../../shared/enums/user-roles.enum';
 import {
   Column,
   Entity,
-  JoinColumn,
+  ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import Audit from '../../shared/interface/audit.entity';
@@ -27,7 +25,7 @@ export class User extends Audit {
   password: string;
 
   @ApiProperty()
-  @Column({ name: "first_name" })
+  @Column({ name: 'first_name' })
   first_name: string;
 
   @ApiProperty()
@@ -42,11 +40,22 @@ export class User extends Audit {
   @Column({ default: UserRole.STANDARD, nullable: false })
   role: UserRole;
 
-  @OneToMany(() => User, (user) => user.manager_id)
-  manager_id: number;
+  @ManyToOne(() => User, (user) => user.employee, {
+    onDelete: 'SET NULL',
+    onUpdate: 'SET NULL',
+  })
+  manager: User;
+
+  @OneToMany(() => User, (user) => user.manager)
+  employee: User[];
+
   @ApiProperty()
   @Column({ default: false, nullable: true })
   active: boolean;
+
+  @ApiProperty()
+  @Column({ default: false, nullable: false })
+  isVerified: boolean;
 
   @Column({ nullable: true })
   @Exclude()
