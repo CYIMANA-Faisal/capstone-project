@@ -60,22 +60,23 @@ export class AuthController {
       results: result,
     };
   }
-  @ApiCreatedResponse({
-    description: 'Verification code sent',
-    ...getGenericResponseSchema(),
-  })
-  @ApiNotFoundResponse({ description: 'No email or phone found' })
-  @ApiBadRequestResponse({ description: 'Bad request' })
-  @HttpCode(HttpStatus.CREATED)
-  @Post('/requestVerCode')
-  async requestVerification(
-    @Body() requestVerificationCodeDto: RequestVerificationCode,
-  ): Promise<GenericResponse<string>> {
-    await this.authService.requestVerification(
-      requestVerificationCodeDto.emailOrPhone,
-    );
-    return { message: 'Verification code sent', results: '' };
-  }
+
+  // @ApiCreatedResponse({
+  //   description: 'Verification code sent',
+  //   ...getGenericResponseSchema(),
+  // })
+  // @ApiNotFoundResponse({ description: 'No email or phone found' })
+  // @ApiBadRequestResponse({ description: 'Bad request' })
+  // @HttpCode(HttpStatus.CREATED)
+  // @Post('/requestVerCode')
+  // async requestVerification(
+  //   @Body() requestVerificationCodeDto: RequestVerificationCode,
+  // ): Promise<GenericResponse<string>> {
+  //   await this.authService.requestVerification(
+  //     requestVerificationCodeDto.emailOrPhone,
+  //   );
+  //   return { message: 'Verification code sent', results: '' };
+  // }
   @ApiCreatedResponse({
     description: 'Account verified',
     ...getGenericResponseSchema(),
@@ -94,6 +95,7 @@ export class AuthController {
 
     return { message: 'Account verified successfully', results: '' };
   }
+
   @ApiCreatedResponse({
     description: 'login successfully',
     ...getGenericResponseSchema(User),
@@ -101,37 +103,35 @@ export class AuthController {
   @ApiExtraModels(User)
   @ApiConflictResponse({ description: 'User logged in successfully' })
   @ApiBadRequestResponse({ description: 'Bad request' })
-  @HttpCode(HttpStatus.OK)
-  @Post('/Adminlogin')
+  @HttpCode(HttpStatus.CREATED)
+  @Post('/login')
   async login(@Body() loginDto: LoginDto): Promise<GenericResponse<any>> {
-    const result = await this.authService.adminLogin(
-      loginDto.password,
-      loginDto.email,
-    );
+    const result = await this.authService.login(loginDto);
     return {
       message: SUCCESS_LOGIN,
-      results: { refreshToken: result.refreshToken, user: result.user },
+      results: { refreshToken: result },
     };
   }
-  @ApiCreatedResponse({
-    description: 'login successfully',
-    ...getGenericResponseSchema(User),
-  })
-  @ApiExtraModels(User)
-  @ApiConflictResponse({ description: 'User logged in successfully' })
-  @ApiBadRequestResponse({ description: 'Bad request' })
-  @HttpCode(HttpStatus.OK)
-  @Post('/userlogin')
-  async userlogin(@Body() loginDto: LoginDto): Promise<GenericResponse<any>> {
-    const result = await this.authService.standardUserLogin(
-      loginDto.password,
-      loginDto.email,
-    );
-    return {
-      message: SUCCESS_LOGIN,
-      results: { refreshToken: result.refreshToken, user: result.user },
-    };
-  }
+
+  // @ApiCreatedResponse({
+  //   description: 'login successfully',
+  //   ...getGenericResponseSchema(User),
+  // })
+  // @ApiExtraModels(User)
+  // @ApiConflictResponse({ description: 'User logged in successfully' })
+  // @ApiBadRequestResponse({ description: 'Bad request' })
+  // @HttpCode(HttpStatus.OK)
+  // @Post('/userlogin')
+  // async userlogin(@Body() loginDto: LoginDto): Promise<GenericResponse<any>> {
+  //   const result = await this.authService.standardUserLogin(
+  //     loginDto.password,
+  //     loginDto.email,
+  //   );
+  //   return {
+  //     message: SUCCESS_LOGIN,
+  //     results: { refreshToken: result.refreshToken, user: result.user },
+  //   };
+  // }
   @ApiCreatedResponse({
     description: 'password changed successfully',
     ...getGenericResponseSchema(User),
@@ -141,13 +141,17 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Bad request' })
   @HttpCode(HttpStatus.OK)
   @Patch('/changePassword')
-  async changePassword(@Req() req,@Body() changePasswordDto: ChangePasswordDto): Promise<GenericResponse<any>> {
-    const result = await this.authService.changePassword(req.User,changePasswordDto  );
-       return {
-      message:'password changed successfully' ,
-      results: {user: result.user },
+  async changePassword(
+    @Req() req,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<GenericResponse<any>> {
+    const result = await this.authService.changePassword(
+      req.User,
+      changePasswordDto,
+    );
+    return {
+      message: 'password changed successfully',
+      results: { user: result.user },
     };
   }
 }
-
-

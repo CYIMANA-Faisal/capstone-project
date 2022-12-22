@@ -36,7 +36,7 @@ import { EMAIL_REGEX } from 'src/shared/constants/regex.constant';
 import { Code } from 'src/users/entities/code.entity';
 import { UserRole } from '../shared/enums/user-roles.enum';
 import { ChangePasswordDto } from './dto/change-password.dto';
-
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -96,59 +96,45 @@ export class AuthService {
       return false;
     }
   }
-  async requestVerification(emailorPhone: string): Promise<void> {
-    const user = await this.findUserByEmailOrPhoneNumber(emailorPhone);
-    if (!user) {
-      throw new UnauthorizedException(USER_NOT_FOUND);
-    }
-    if (user.isVerified) {
-      throw new BadRequestException(ACCOUNT_ALREADY_VERIFIED);
-    }
-    const verificationCodeEntry = {
-      code: codeGenerator(),
-      expiryDate: formatISO(new Date(addDays(new Date(), 1)), {
-        representation: 'complete',
-      }),
-      user: user,
-    };
-    await this.verificationCodeRepository.delete({ user: user });
-    const verificationCode = await this.verificationCodeRepository.save(
-      verificationCodeEntry,
-    );
-    if (this.checkDataIsEmail(emailorPhone)) {
-      const body: string =
-        'Hello ' +
-        user.first_name +
-        ', Please verify your account by entering this code: ' +
-        verificationCode.code;
-      const verificationMail = {
-        to: user.email,
-        subject: VERIFICATION_EMAIL_SUBJECT,
-        from: process.env.SENT_EMAIL_FROM,
-        text: body,
-        html: '<h1>' + body + '</h2>',
-      };
-      await this.sendGridService.send(verificationMail);
-    }
-  }
-  async findUserByEmailOrPhoneNumber(emailorPhone: string): Promise<User> {
-    if (
-      !this.checkDataIsEmail(emailorPhone) &&
-      !this.checkDataIsPhone(emailorPhone)
-    ) {
-      throw new BadRequestException('Please use either email or phonenumber');
-    }
-    let user = new User();
-    if (this.checkDataIsEmail(emailorPhone)) {
-      user = await this.userRepository.findOne({
-        email: emailorPhone,
-      });
-    }
-    if (this.checkDataIsPhone(emailorPhone)) {
-      user = await this.userRepository.findOne({
-        phone_number: emailorPhone,
-      });
-    }
+  // async requestVerification(emailorPhone: string): Promise<void> {
+  //   const user = await this.findUserByEmailOrPhoneNumber(emailorPhone);
+  //   if (!user) {
+  //     throw new UnauthorizedException(USER_NOT_FOUND);
+  //   }
+  //   if (user.isVerified) {
+  //     throw new BadRequestException(ACCOUNT_ALREADY_VERIFIED);
+  //   }
+  //   const verificationCodeEntry = {
+  //     code: codeGenerator(),
+  //     expiryDate: formatISO(new Date(addDays(new Date(), 1)), {
+  //       representation: 'complete',
+  //     }),
+  //     user: user,
+  //   };
+  //   await this.verificationCodeRepository.delete({ user: user });
+  //   const verificationCode = await this.verificationCodeRepository.save(
+  //     verificationCodeEntry,
+  //   );
+  //   if (this.checkDataIsEmail(emailorPhone)) {
+  //     const body: string =
+  //       'Hello ' +
+  //       user.first_name +
+  //       ', Please verify your account by entering this code: ' +
+  //       verificationCode.code;
+  //     const verificationMail = {
+  //       to: user.email,
+  //       subject: VERIFICATION_EMAIL_SUBJECT,
+  //       from: process.env.SENT_EMAIL_FROM,
+  //       text: body,
+  //       html: '<h1>' + body + '</h2>',
+  //     };
+  //     await this.sendGridService.send(verificationMail);
+  //   }
+  // }
+  async findUserByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      email: email,
+    });
     return user;
   }
   checkDataIsEmail(email: string): boolean {
@@ -199,8 +185,8 @@ export class AuthService {
       user: omit(result.user, ['password', 'currentHashedRefreshToken']),
     };
   }
-  public getJwtAccessToken(userId: number, userEmail: string): string {
-    const payload = { username: userEmail, sub: userId };
+  public getJwtAccessToken(user: User): string {
+    const payload = { id: user.id, email: user.email, role: user.role };
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
       expiresIn: this.configService.get<string>(
@@ -210,8 +196,8 @@ export class AuthService {
     return token;
   }
 
-  public getJwtRefreshToken(userId: number, userEmail: string): string {
-    const payload = { username: userEmail, sub: userId };
+  public getJwtRefreshToken(user: User): string {
+    const payload = { id: user.id, email: user.email, role: user.role };
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
       expiresIn: this.configService.get<string>(
@@ -237,88 +223,22 @@ export class AuthService {
     );
     return isRefreshTokenMatching;
   }
-  async adminLogin(password: string, email: string) {
-    const user = await this.findUserByEmailOrPhoneNumber(email);
-    if (user) {
-      if (
-        ((await this.bcryptService.compare(password, user.password)) &&
-        email === user.email) || ((await this.bcryptService.compare(password, user.password)) &&
-        email === user.phone_number) 
-      ) {
-        if (user.isVerified) {
-          if (user.active ) {
-            if(user.role==UserRole.ADMIN){
-              const accessToken = this.getJwtAccessToken(user.id, user.email);
-              const refreshToken = this.getJwtRefreshToken(user.id, user.email);
-              await this.setCurrentHashedRefreshToken(refreshToken, user.id);
-              const result = {
-                accessToken,
-                refreshToken,
-                user: omit(user, ['password', 'currentHashedRefreshToken']),
-              };
-              return result;
-            }else{
-              throw new ConflictException(
-                NO_ACCESS_TO_THE_PORTAL
-              );
-            }
-             } else {
-            throw new ConflictException(ACCOUNT_IN_DORMANT_MODE);
-          }
-        } else {
-          throw new ConflictException(
-            UNVERIFIED_ACCOUNT
-          );
-        }
-      } else {
-        throw new ConflictException(INVALID_CREDENTIAL);
-      }
-    } else {
-      throw new ConflictException(YOU_CAN_LOGIN_WITH_EITHER_EMAIL_OR_PHONE_NUMBER 
-        );
+  async login(loginDto: LoginDto) {
+    const user = await this.findUserByEmail(loginDto.email);
+    const isPasswordValid = await this.bcryptService.compare(
+      loginDto.password,
+      user?.password ? user.password : 'no password',
+    );
+    if (!user || !isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
     }
+    const results = {
+      accessToken: await this.getJwtAccessToken(user),
+      refreshToken: await this.getJwtRefreshToken(user),
+    };
+    return results;
   }
-  async standardUserLogin(password: string, email: string) {
-    const user = await this.findUserByEmailOrPhoneNumber(email);
-    if (user) {
-      if (
-        ((await this.bcryptService.compare(password, user.password)) &&
-        email === user.email) || ((await this.bcryptService.compare(password, user.password)) &&
-        email === user.phone_number) 
-      ) {
-        if (user.isVerified) {
-          if (user.active ) {
-            if(user.role==UserRole.STANDARD){
-              const accessToken = this.getJwtAccessToken(user.id, user.email);
-              const refreshToken = this.getJwtRefreshToken(user.id, user.email);
-              await this.setCurrentHashedRefreshToken(refreshToken, user.id);
-              const result = {
-                accessToken,
-                refreshToken,
-                user: omit(user, ['password', 'currentHashedRefreshToken']),
-              };
-              return result;
-            }else{
-              throw new ConflictException(
-                NO_ACCESS_TO_THE_PORTAL
-              );
-            }
-             } else {
-            throw new ConflictException(ACCOUNT_IN_DORMANT_MODE);
-          }
-        } else {
-          throw new ConflictException(
-            UNVERIFIED_ACCOUNT
-          );
-        }
-      } else {
-        throw new ConflictException(INVALID_CREDENTIAL);
-      }
-    } else {
-      throw new ConflictException(YOU_CAN_LOGIN_WITH_EITHER_EMAIL_OR_PHONE_NUMBER 
-        );
-    }
-  }
+
   async setCurrentHashedRefreshToken(refreshToken: string, id: number) {
     const hashedRefreshToken = await this.bcryptService.hash(refreshToken);
     await this.userRepository.update(
@@ -326,21 +246,34 @@ export class AuthService {
       { currentHashedRefreshToken: hashedRefreshToken },
     );
   }
-  async changePassword(userToUpdate:User,psdDto:ChangePasswordDto):Promise<any>{
-    const user = await this.userRepository.findOne({ id: userToUpdate.id});
-    if(await this.bcryptService.compare(psdDto.currentPassword,userToUpdate.password)){
-      if(!(psdDto.currentPassword===psdDto.newPassword)){
-        const updateduser=  await this.userRepository.update(
-          {id: userToUpdate.id},
-          { password: await this.bcryptService.hash(psdDto.newPassword)},
+  async changePassword(
+    userToUpdate: User,
+    psdDto: ChangePasswordDto,
+  ): Promise<any> {
+    const user = await this.userRepository.findOne({ id: userToUpdate.id });
+    if (
+      await this.bcryptService.compare(
+        psdDto.currentPassword,
+        userToUpdate.password,
+      )
+    ) {
+      if (!(psdDto.currentPassword === psdDto.newPassword)) {
+        const updateduser = await this.userRepository.update(
+          { id: userToUpdate.id },
+          { password: await this.bcryptService.hash(psdDto.newPassword) },
         );
-        return  {user: omit(updateduser, ['password', 'currentHashedRefreshToken'])}
-      }else{
-        throw new ConflictException("The current and new passwords can't match" );
-       }
-    }else{
-      throw new ConflictException("The current and existing passwords don't match" );
-       }
+        return {
+          user: omit(updateduser, ['password', 'currentHashedRefreshToken']),
+        };
+      } else {
+        throw new ConflictException(
+          "The current and new passwords can't match",
+        );
+      }
+    } else {
+      throw new ConflictException(
+        "The current and existing passwords don't match",
+      );
     }
+  }
 }
-
