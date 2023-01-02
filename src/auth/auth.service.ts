@@ -342,19 +342,7 @@ export class AuthService {
       throw new ConflictException("The current and existing passwords don't match" );
        }
     }
-    async findAllUsers():Promise<any>{
-      const users=await this.userRepository.find();
-    /*  for(let i=0;i<users.length;i++){
-        return{firstName:users[i].first_name,
-          lastName:users[i].last_name,
-          email:users[i].email,
-          phoneNumber:users[i].phone_number,
-          isActive:users[i].active,
-          isVerified:users[i].isVerified,
-        };
-      }*/
-      return{users};
-    }
+   
    
 }
 
