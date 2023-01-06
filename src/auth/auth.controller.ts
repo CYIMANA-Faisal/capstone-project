@@ -36,8 +36,9 @@ import { Patch } from '@nestjs/common/decorators';
 import { AuthUser, GetUser } from './decorators/get-user.decorator';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
-@ApiTags('Authentication')
+@ApiTags('AuthHarambee')
 @Controller('auth')
 @UseFilters(HttpExceptionFilter)
 export class AuthController {
@@ -184,9 +185,9 @@ export class AuthController {
   @Patch('/resetPassword')
   async resetPassword(
    
-    @Body() forgotPasswordDto: ForgotPasswordDto,
+    @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<GenericResponse<any>> {
-    const result = await this.authService.resetPassword(forgotPasswordDto);
+    const result = await this.authService.resetPassword(resetPasswordDto);
     return {
       message: 'password changed successfully',
       results: { user: result.user },

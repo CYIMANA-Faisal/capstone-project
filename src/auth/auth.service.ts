@@ -39,6 +39,7 @@ import { UserRole } from '../shared/enums/user-roles.enum';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -74,7 +75,7 @@ export class AuthService {
       await this.verificationCodeRepository.save({
         code: verificationCode,
         user: registeredUser,
-        expiryDate: new Date(),
+        expiryDate: formatISO(addMinutes(new Date(),10),{representation:'complete'}),
       });
       const verificationMail = {
         to: user.email,
@@ -84,7 +85,7 @@ export class AuthService {
         html: `<h1>Hello @ ${registeredUser.first_name} please use the code below to verify your account ${verificationCode} </h1>`,
       };
       await this.sendGridService.send(verificationMail);
-      return registeredUser;
+      return omit(registeredUser,['password','currentHashedRefreshToken']);
     }
     return user;
   }
@@ -108,7 +109,7 @@ export class AuthService {
     }
     const verificationCodeEntry = {
       code: codeGenerator(),
-      expiryDate:new Date(),
+      expiryDate:formatISO(addMinutes(new Date(),10),{representation:'complete'}),
       user: user,
     };
     await this.verificationCodeRepository.delete({ user: user });
@@ -312,7 +313,7 @@ throw new ConflictException("User not found");
       await this.verificationCodeRepository.save({
         code: verificationCode,
         user: user,
-        expiryDate: new Date(),
+        expiryDate: formatISO(addMinutes(new Date(),10),{representation:'complete'}),
       });
       const verificationMail = {
         to: user.email,
@@ -324,11 +325,11 @@ throw new ConflictException("User not found");
       await this.sendGridService.send(verificationMail);
       return user;
      }
-     async resetPassword(forgotPasswordDto:ForgotPasswordDto){
-      const user=await this.findUserByEmail(forgotPasswordDto.email);
-      forgotPasswordDto.password=await this.bcryptService.hash(forgotPasswordDto.password);
+     async resetPassword(resetPasswordDto:ResetPasswordDto){
+      const user=await this.findUserByEmail(resetPasswordDto.email);
+      resetPasswordDto.password=await this.bcryptService.hash(resetPasswordDto.password);
       const isPasswordValid = await this.bcryptService.compare(
-        forgotPasswordDto.confirmPassword,forgotPasswordDto.password,);
+        resetPasswordDto.confirmPassword,resetPasswordDto.password,);
       if(!user){
         throw new UnauthorizedException('Invalid email');
       }if(!isPasswordValid){
@@ -339,7 +340,7 @@ throw new ConflictException("User not found");
       }
       const updatedPass = await this.userRepository.update(
         { email: user.email },
-        { password: forgotPasswordDto.password },
+        { password: resetPasswordDto.password },
       );
       return {
         user: omit(updatedPass, ['password', 'currentHashedRefreshToken']),
