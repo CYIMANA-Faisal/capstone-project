@@ -142,7 +142,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Patch('/changePassword')
   async changePassword(
-    @AuthUser() user:User,
+    @AuthUser() user: User,
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<GenericResponse<any>> {
     const result = await this.authService.changePassword(
@@ -167,7 +167,9 @@ export class AuthController {
   async forgotPassword(
     @Body() forgotPasswordDto: ForgotPasswordDto,
   ): Promise<GenericResponse<any>> {
-    const result = await this.authService.forgotPassword(forgotPasswordDto.email);
+    const result = await this.authService.forgotPassword(
+      forgotPasswordDto.email,
+    );
     return {
       message: 'verification code sent successfully',
       results: result,
@@ -184,7 +186,6 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Patch('/resetPassword')
   async resetPassword(
-   
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<GenericResponse<any>> {
     const result = await this.authService.resetPassword(resetPasswordDto);

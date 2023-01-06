@@ -75,7 +75,9 @@ export class AuthService {
       await this.verificationCodeRepository.save({
         code: verificationCode,
         user: registeredUser,
-        expiryDate: formatISO(addMinutes(new Date(),10),{representation:'complete'}),
+        expiryDate: formatISO(addMinutes(new Date(), 10), {
+          representation: 'complete',
+        }),
       });
       const verificationMail = {
         to: user.email,
@@ -85,7 +87,7 @@ export class AuthService {
         html: `<h1>Hello @ ${registeredUser.first_name} please use the code below to verify your account ${verificationCode} </h1>`,
       };
       await this.sendGridService.send(verificationMail);
-      return omit(registeredUser,['password','currentHashedRefreshToken']);
+      return omit(registeredUser, ['password', 'currentHashedRefreshToken']);
     }
     return user;
   }
@@ -109,7 +111,9 @@ export class AuthService {
     }
     const verificationCodeEntry = {
       code: codeGenerator(),
-      expiryDate:formatISO(addMinutes(new Date(),10),{representation:'complete'}),
+      expiryDate: formatISO(addMinutes(new Date(), 10), {
+        representation: 'complete',
+      }),
       user: user,
     };
     await this.verificationCodeRepository.delete({ user: user });
@@ -133,19 +137,22 @@ export class AuthService {
     }
   }
   findUserByEmailOrPhoneNumber(emailorPhone): Promise<User> {
-    if(!(this.checkDataIsEmail(emailorPhone))&&!this.checkDataIsPhone(emailorPhone)){
-throw new BadRequestException(EMAIL_OR_PHONE_NUMBER_IS_REQUIRED);
+    if (
+      !this.checkDataIsEmail(emailorPhone) &&
+      !this.checkDataIsPhone(emailorPhone)
+    ) {
+      throw new BadRequestException(EMAIL_OR_PHONE_NUMBER_IS_REQUIRED);
     }
-    let user=null;
-    if(this.checkDataIsEmail(emailorPhone)){
-       user =  this.userRepository.findOne({
+    let user = null;
+    if (this.checkDataIsEmail(emailorPhone)) {
+      user = this.userRepository.findOne({
         email: emailorPhone,
       });
     }
-    if(this.checkDataIsPhone(emailorPhone)){
-       user= this.userRepository.findOne({phone_number:emailorPhone});
-     }
-return user;
+    if (this.checkDataIsPhone(emailorPhone)) {
+      user = this.userRepository.findOne({ phone_number: emailorPhone });
+    }
+    return user;
   }
   async findUserByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({
@@ -236,7 +243,7 @@ return user;
     const isRefreshTokenMatching = await this.bcryptService.compare(
       refreshToken,
       hashedRefreshedToken,
-    ); 
+    );
     return isRefreshTokenMatching;
   }
   async login(loginDto: LoginDto) {
@@ -248,10 +255,10 @@ return user;
     if (!user || !isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    if(!user.isVerified){
+    if (!user.isVerified) {
       throw new UnauthorizedException(UNVERIFIED_ACCOUNT);
     }
-    if(!user.active){
+    if (!user.active) {
       throw new UnauthorizedException(ACCOUNT_IN_DORMANT_MODE);
     }
     const results = {
@@ -260,10 +267,9 @@ return user;
     };
     const token = this.jwtService.verify(results.accessToken, {
       secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
-      
-    }); 
-    console.log(token.id,token.role);
-    await this.setCurrentHashedRefreshToken(results.refreshToken,user.id);
+    });
+    console.log(token.id, token.role);
+    await this.setCurrentHashedRefreshToken(results.refreshToken, user.id);
     return results;
   }
 
@@ -275,108 +281,113 @@ return user;
     );
   }
   async changePassword(
-    userId:number,
+    userId: number,
     psdDto: ChangePasswordDto,
   ): Promise<any> {
     const user = await this.userRepository.findOne({ id: userId });
     if (
-      !await this.bcryptService.compare(
-        psdDto.currentPassword,
-        user.password,
-      )
-    ) { throw new ConflictException(
-      "The current and existing passwords don't match",
-    );
+      !(await this.bcryptService.compare(psdDto.currentPassword, user.password))
+    ) {
+      throw new ConflictException(
+        "The current and existing passwords don't match",
+      );
     }
-      if (psdDto.currentPassword === psdDto.newPassword) {
-        throw new ConflictException(
-          "The current and new passwords can't match",
-        );
-      }
-        const updateduser = await this.userRepository.update(
-          { id: user.id },
-          { password: await this.bcryptService.hash(psdDto.newPassword) },
-        );
-        return {
-          user: omit(updateduser, ['password', 'currentHashedRefreshToken']),
-        };
-     }
-     async forgotPassword(email:string):Promise<User>{
-      const user=await this.findUserByEmail(email);
-      if(!user){
-throw new ConflictException("User not found");
-      }
-      if(!user.isVerified){
-        throw new ConflictException(UNVERIFIED_ACCOUNT);
-      }
-      const verificationCode = codeGenerator();
-      await this.verificationCodeRepository.save({
-        code: verificationCode,
-        user: user,
-        expiryDate: formatISO(addMinutes(new Date(),10),{representation:'complete'}),
-      });
+    if (psdDto.currentPassword === psdDto.newPassword) {
+      throw new ConflictException("The current and new passwords can't match");
+    }
+    const updateduser = await this.userRepository.update(
+      { id: user.id },
+      { password: await this.bcryptService.hash(psdDto.newPassword) },
+    );
+    return {
+      user: omit(updateduser, ['password', 'currentHashedRefreshToken']),
+    };
+  }
+  async forgotPassword(email: string): Promise<User> {
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new ConflictException('User not found');
+    }
+    if (!user.isVerified) {
+      throw new ConflictException(UNVERIFIED_ACCOUNT);
+    }
+    const verificationCode = codeGenerator();
+    await this.verificationCodeRepository.save({
+      code: verificationCode,
+      user: user,
+      expiryDate: formatISO(addMinutes(new Date(), 10), {
+        representation: 'complete',
+      }),
+    });
+    const verificationMail = {
+      to: user.email,
+      subject: VERIFICATION_EMAIL_SUBJECT,
+      from: this.configService.get<string>('SENT_EMAIL_FROM'),
+      text: `Hello verify the account`,
+      html: `<h1>Hello @ ${user.first_name} please use the code below to verify your account ${verificationCode} </h1>`,
+    };
+    await this.sendGridService.send(verificationMail);
+    return user;
+  }
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const user = await this.findUserByEmail(resetPasswordDto.email);
+    resetPasswordDto.password = await this.bcryptService.hash(
+      resetPasswordDto.password,
+    );
+    const isPasswordValid = await this.bcryptService.compare(
+      resetPasswordDto.confirmPassword,
+      resetPasswordDto.password,
+    );
+    if (!user) {
+      throw new UnauthorizedException('Invalid email');
+    }
+    if (!isPasswordValid) {
+      throw new ConflictException("passwords don't match");
+    }
+    if (!user.isVerified) {
+      throw new UnauthorizedException(UNVERIFIED_ACCOUNT);
+    }
+    const updatedPass = await this.userRepository.update(
+      { email: user.email },
+      { password: resetPasswordDto.password },
+    );
+    return {
+      user: omit(updatedPass, ['password', 'currentHashedRefreshToken']),
+    };
+  }
+  async requestPasswordCode(emailorPhone: string): Promise<void> {
+    const user = await this.findUserByEmailOrPhoneNumber(emailorPhone);
+    if (!user) {
+      throw new UnauthorizedException(USER_NOT_FOUND);
+    }
+    if (!user.isVerified) {
+      throw new BadRequestException(UNVERIFIED_ACCOUNT);
+    }
+    const verificationCodeEntry = {
+      code: codeGenerator(),
+      expiryDate: formatISO(addMinutes(new Date(), 10), {
+        representation: 'complete',
+      }),
+      user: user,
+    };
+    await this.verificationCodeRepository.delete({ user: user });
+    const verificationCode = await this.verificationCodeRepository.save(
+      verificationCodeEntry,
+    );
+    if (this.checkDataIsEmail(emailorPhone)) {
+      const body: string =
+        'Hello ' +
+        user.first_name +
+        ', Please verify your account by entering this code: ' +
+        verificationCode.code;
       const verificationMail = {
         to: user.email,
         subject: VERIFICATION_EMAIL_SUBJECT,
-        from: this.configService.get<string>('SENT_EMAIL_FROM'),
-        text: `Hello verify the account`,
-        html: `<h1>Hello @ ${user.first_name} please use the code below to verify your account ${verificationCode} </h1>`,
+        from: process.env.SENT_EMAIL_FROM,
+        text: body,
+        html: '<h1>' + body + '</h2>',
       };
       await this.sendGridService.send(verificationMail);
-      return user;
-     }
-     async resetPassword(resetPasswordDto:ResetPasswordDto){
-      const user=await this.findUserByEmail(resetPasswordDto.email);
-      resetPasswordDto.password=await this.bcryptService.hash(resetPasswordDto.password);
-      const isPasswordValid = await this.bcryptService.compare(
-        resetPasswordDto.confirmPassword,resetPasswordDto.password,);
-      if(!user){
-        throw new UnauthorizedException('Invalid email');
-      }if(!isPasswordValid){
-        throw new ConflictException("passwords don't match");
-      }
-      if(!user.isVerified){
-        throw new UnauthorizedException(UNVERIFIED_ACCOUNT);
-      }
-      const updatedPass = await this.userRepository.update(
-        { email: user.email },
-        { password: resetPasswordDto.password },
-      );
-      return {
-        user: omit(updatedPass, ['password', 'currentHashedRefreshToken']),
-      };
-     }
-     async requestPasswordCode(emailorPhone: string): Promise<void> {
-      const user = await this.findUserByEmailOrPhoneNumber(emailorPhone);
-      if (!user) {
-        throw new UnauthorizedException(USER_NOT_FOUND);
-      }
-      if (!user.isVerified) {
-        throw new BadRequestException(UNVERIFIED_ACCOUNT);
-      }
-      const verificationCodeEntry = {
-        code: codeGenerator(),
-        expiryDate:formatISO(addMinutes(new Date(),10),{representation:'complete'}),
-        user: user,
-      };
-      await this.verificationCodeRepository.delete({ user: user });
-      const verificationCode = await this.verificationCodeRepository.save(
-        verificationCodeEntry,
-      );
-      if (this.checkDataIsEmail(emailorPhone)) {
-        const body: string =
-          'Hello ' +
-          user.first_name +
-          ', Please verify your account by entering this code: ' +
-          verificationCode.code;
-        const verificationMail = {
-          to: user.email,
-          subject: VERIFICATION_EMAIL_SUBJECT,
-          from: process.env.SENT_EMAIL_FROM,
-          text: body,
-          html: '<h1>' + body + '</h2>',
-        };
-        await this.sendGridService.send(verificationMail);
-      }
     }
+  }
 }

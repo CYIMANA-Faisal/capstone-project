@@ -9,17 +9,17 @@ export class ResetPasswordDto {
     message: 'Password is weak',
   })
   password: string;
-  
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
   @Matches(/^(?=.*[\d])(?=.*[a-z])(?=.*[A-Z]).{8,16}$/, {
     message: 'Password is weak',
   })
-  confirmPassword:string
-  
+  confirmPassword: string;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  code:string
+  code: string;
 }

@@ -25,7 +25,7 @@ export class CreateUserDto {
     message: 'Password is weak',
   })
   password: string;
- 
+
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
