@@ -35,6 +35,7 @@ export class User extends Audit {
   @Column({ unique: true, nullable: false })
   phone_number: string;
 
+
   @ApiProperty()
   @Column({ default: UserRole.STANDARD, nullable: false })
   role: UserRole;
