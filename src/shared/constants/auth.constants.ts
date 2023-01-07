@@ -3,8 +3,7 @@ export const SUCCESS_SIGNUP =
 export const SUCCESS_LOGIN = 'Login successfully';
 export const VERIFICATION_EMAIL_SUBJECT = 'HR account verification';
 export const VERIFICATION_CODE_EXPIRED = 'Your verification code has expired';
-export const INVALID_VERIFICATION_CODE =
-  'Invalid Code or your account is already verified';
+export const INVALID_VERIFICATION_CODE = 'Invalid Code';
 export const INVALID_CREDENTIAL = 'Invalid credentials';
 export const ACCOUNT_ALREADY_VERIFIED = 'Your account is already verified';
 export const EMAIL_OR_PHONE_NUMBER_IS_REQUIRED =

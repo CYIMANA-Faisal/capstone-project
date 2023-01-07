@@ -1,16 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsBoolean,
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsString,
   Matches,
   MinLength,
 } from 'class-validator';
-import { VerifyBy } from 'src/shared/enums/verify.enum';
-import { Gender } from './../../shared/enums/gender.enum';
-
 export class CreateUserDto {
   @ApiProperty()
   @IsEmail()
@@ -41,9 +36,4 @@ export class CreateUserDto {
   @IsString()
   @MinLength(13)
   phone_number: string;
-
-  @ApiProperty()
-  @IsEnum(VerifyBy)
-  @IsNotEmpty()
-  verifyBy: VerifyBy;
 }

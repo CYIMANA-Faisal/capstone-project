@@ -21,7 +21,10 @@ export class Code {
   @Column({ nullable: false })
   expiryDate: Date;
 
-  @OneToOne(() => User)
+  @OneToOne(() => User, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn()
   user: User;
 }

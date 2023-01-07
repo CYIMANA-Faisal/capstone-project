@@ -5,5 +5,5 @@ export class RequestVerificationCode {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  emailOrPhone: string;
+  email: string;
 }
