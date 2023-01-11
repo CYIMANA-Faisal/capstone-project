@@ -33,7 +33,7 @@ export class UsersController {
   @ApiConflictResponse({ description: 'A User' })
   @ApiBadRequestResponse({ description: 'Bad request' })
   @HttpCode(HttpStatus.OK)
-  @Get('/user')
+  @Get('/AUser')
   async findUser(@Query()findUserDto:FindUserDto): Promise<GenericResponse<any>> {
     const result = await this.usersService.findUserByEmailOrPhoneNumber(findUserDto);
     return {
