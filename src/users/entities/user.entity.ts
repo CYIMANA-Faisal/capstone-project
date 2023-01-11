@@ -20,7 +20,7 @@ export class User extends Audit {
   @Column({ unique: true, nullable: false })
   email: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, select:false })
   password: string;
 
   @ApiProperty()
@@ -56,7 +56,7 @@ export class User extends Audit {
   @Column({ default: false, nullable: false })
   isVerified: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true,select:false })
   @Exclude()
   public currentHashedRefreshToken?: string;
 }
