@@ -7,15 +7,17 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 
+@ApiTags('department')
 @Controller('department')
 export class DepartmentController {
   constructor(private readonly departmentService: DepartmentService) {}
 
-  @Post('/createdepartment')
+  @Post('')
   async create(@Body() createDepartmentDto: CreateDepartmentDto) {
     const result = await this.departmentService.create(createDepartmentDto);
     return {
@@ -33,7 +35,7 @@ export class DepartmentController {
     };
   }
 
-  @Get(':id')
+  @Get('/:id')
   async findOne(@Param('id') id: string) {
     const result = await this.departmentService.findOne(+id);
     return {
@@ -42,7 +44,7 @@ export class DepartmentController {
     };
   }
 
-  @Patch(':id')
+  @Patch('/:id')
   async update(
     @Param('id') id: string,
     @Body() updateDepartmentDto: UpdateDepartmentDto,
@@ -57,7 +59,7 @@ export class DepartmentController {
     };
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   async remove(@Param('id') id: string) {
     const result = await this.departmentService.remove(+id);
 

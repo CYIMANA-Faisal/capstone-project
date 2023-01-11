@@ -16,9 +16,11 @@ import {
   ApiExtraModels,
   ApiConflictResponse,
   ApiBadRequestResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Profile } from './entities/profile.entity';
 
+@ApiTags('profile')
 @Controller('profile')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
@@ -27,7 +29,7 @@ export class ProfileController {
   @ApiConflictResponse({ description: 'Profile created successfully' })
   @ApiBadRequestResponse({ description: 'Bad request' })
   @HttpCode(HttpStatus.OK)
-  @Post('/createprofile')
+  @Post('')
   async create(@Body() createProfileDto: CreateProfileDto) {
     const result = await this.profileService.create(createProfileDto);
     return {
@@ -36,7 +38,7 @@ export class ProfileController {
     };
   }
 
-  @Get()
+  @Get('')
   async findAll() {
     const result = await this.profileService.findAll();
     return {
@@ -45,7 +47,7 @@ export class ProfileController {
     };
   }
 
-  @Get(':id')
+  @Get('/:id')
   async findOne(@Param('id') id: string) {
     const result = await this.profileService.findOne(+id);
     return {
@@ -54,7 +56,7 @@ export class ProfileController {
     };
   }
 
-  @Patch(':id')
+  @Patch('/:id')
   async update(
     @Param('id') id: string,
     @Body() updateProfileDto: UpdateProfileDto,
@@ -66,7 +68,7 @@ export class ProfileController {
     };
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   async remove(@Param('id') id: string) {
     await this.profileService.remove(+id);
     return {
