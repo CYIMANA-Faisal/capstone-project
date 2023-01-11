@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Patch,
-  Put,
   Param,
   Delete,
   HttpCode,
@@ -14,14 +13,11 @@ import { ProfileService } from './profile.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
-  ApiCreatedResponse,
   ApiExtraModels,
   ApiConflictResponse,
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
-import { getGenericResponseSchema } from 'src/shared/util/swagger.util';
 import { Profile } from './entities/profile.entity';
-import { GenericResponse } from 'src/shared/interface/generic-response.interface';
 
 @Controller('profile')
 export class ProfileController {

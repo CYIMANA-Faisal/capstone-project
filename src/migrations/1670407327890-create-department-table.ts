@@ -24,7 +24,7 @@ export class createDepartmentTable1670407327890 implements MigrationInterface {
       `ALTER TABLE "profile" ADD CONSTRAINT "FK_8d6f88161620c6b048326cbd69e" FOREIGN KEY ("departmentId") REFERENCES "department"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     // await queryRunner.query(
-    //   `ALTER TABLE "department" ADD CONSTRAINT "FK_1809e8e6311c8b2c88c5c2ef733" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    //  `ALTER TABLE "department" ADD CONSTRAINT "FK_1809e8e6311c8b2c88c5c2ef733" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     // );
   }
 

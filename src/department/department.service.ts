@@ -6,22 +6,21 @@ import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { Department } from './entities/department.entity';
 
 @Injectable()
+export class DepartmentService {
+  constructor(
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
+  ) {}
 
-export class DepartmentService {constructor(
-  @InjectRepository(Department)
-  private readonly departmentRepository: Repository<Department>,
-) {}
-
-
-  create(createDepartmentDto: CreateDepartmentDto)
+  create(createDepartmentDto: CreateDepartmentDto);
   async create(createDepartmentDto: CreateDepartmentDto) {
     const userProfile = this.departmentRepository.create(createDepartmentDto);
-    const result = await this.departmentRepository.save( userProfile);
+    const result = await this.departmentRepository.save(userProfile);
     return {
       result,
     };
   }
-  
+
   async findAll() {
     const result = await this.departmentRepository.find();
     return {

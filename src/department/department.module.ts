@@ -10,6 +10,6 @@ import { Department } from './entities/department.entity';
     forwardRef(() => DepartmentModule),
   ],
   controllers: [DepartmentController],
-  providers: [DepartmentService]
+  providers: [DepartmentService],
 })
 export class DepartmentModule {}

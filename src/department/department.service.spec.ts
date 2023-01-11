@@ -23,4 +23,3 @@ function beforeEach(arg0: () => Promise<void>) {
 function expect(service: DepartmentService) {
   throw new Error('Function not implemented.');
 }
-

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
@@ -18,7 +26,7 @@ export class DepartmentController {
 
   @Get()
   async findAll() {
-    const result= await this.departmentService.findAll();
+    const result = await this.departmentService.findAll();
     return {
       message: 'Department Getall successfully',
       results: { ...result },
@@ -27,30 +35,35 @@ export class DepartmentController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const result= await this.departmentService.findOne(+id);
-    return{
+    const result = await this.departmentService.findOne(+id);
+    return {
       message: 'Department Get byId successfully',
       results: { ...result },
     };
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDepartmentDto: UpdateDepartmentDto) {
-    const result = await this.departmentService.update(+id, updateDepartmentDto);
-    return{
+  async update(
+    @Param('id') id: string,
+    @Body() updateDepartmentDto: UpdateDepartmentDto,
+  ) {
+    const result = await this.departmentService.update(
+      +id,
+      updateDepartmentDto,
+    );
+    return {
       message: 'Department Update successfully',
       results: { ...result },
     };
-    }
-  
+  }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-     const result = await  this.departmentService.remove(+id);
+    const result = await this.departmentService.remove(+id);
 
-     return{
+    return {
       message: 'Department Deleted successfully',
       results: { ...result },
-     };
+    };
   }
 }
