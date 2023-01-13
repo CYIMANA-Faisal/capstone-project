@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { Gender } from '../../shared/enums/gender.enum';
 
 export class CreateProfileDto {
@@ -39,7 +39,7 @@ export class CreateProfileDto {
   profession: string;
 
   @ApiProperty()
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
   department_id: number;
 

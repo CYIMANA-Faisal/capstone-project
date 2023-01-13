@@ -17,11 +17,8 @@ export class Department extends Audit {
   @Column()
   department_name: string;
 
-  @Column()
-  hod: number;
-
-  @ManyToOne(() => User, (user) => user.department)
-  user: User;
+  @ManyToOne(() => User, (user) => user.hods)
+  hod: User;
 
   @OneToMany(() => Profile, (profile) => profile.department)
   profiles: Profile[];

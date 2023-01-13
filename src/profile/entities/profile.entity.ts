@@ -1,6 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToOne,
+} from 'typeorm';
 import { Department } from '../../department/entities/department.entity';
 import Audit from '../../shared/interface/audit.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class Profile extends Audit {
@@ -51,4 +59,11 @@ export class Profile extends Audit {
 
   @Column()
   district: string;
+
+  @OneToOne(() => User, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn()
+  user: User;
 }

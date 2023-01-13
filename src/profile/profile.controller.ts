@@ -8,6 +8,7 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
@@ -17,8 +18,13 @@ import {
   ApiConflictResponse,
   ApiBadRequestResponse,
   ApiTags,
+  ApiCookieAuth,
 } from '@nestjs/swagger';
 import { Profile } from './entities/profile.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { GetUser } from '../auth/decorators/get-user.decorator';
+import { User } from '../users/entities/user.entity';
+import { omit } from 'lodash';
 
 @ApiTags('profile')
 @Controller('profile')
@@ -29,12 +35,17 @@ export class ProfileController {
   @ApiConflictResponse({ description: 'Profile created successfully' })
   @ApiBadRequestResponse({ description: 'Bad request' })
   @HttpCode(HttpStatus.OK)
+  @ApiCookieAuth()
+  @UseGuards(JwtAuthGuard)
   @Post('')
-  async create(@Body() createProfileDto: CreateProfileDto) {
-    const result = await this.profileService.create(createProfileDto);
+  async create(
+    @GetUser() user: User,
+    @Body() createProfileDto: CreateProfileDto,
+  ) {
+    const result = await this.profileService.create(user, createProfileDto);
     return {
       message: 'Profile created successfully',
-      results: { ...result },
+      results: result,
     };
   }
 

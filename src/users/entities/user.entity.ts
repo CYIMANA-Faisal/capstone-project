@@ -49,8 +49,8 @@ export class User extends Audit {
   @OneToMany(() => User, (user) => user.manager)
   employee: User[];
 
-  @OneToMany(() => User, (user) => user.department)
-  department: User[];
+  @OneToMany(() => Department, (department) => department.hod)
+  hods: User[];
 
   @ApiProperty()
   @Column({ default: false, nullable: true })

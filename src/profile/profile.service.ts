@@ -1,6 +1,13 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { omit } from 'lodash';
 import { Repository } from 'typeorm';
+import { Department } from '../department/entities/department.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Profile } from './entities/profile.entity';
@@ -10,14 +17,24 @@ export class ProfileService {
   constructor(
     @InjectRepository(Profile)
     private readonly profileRepository: Repository<Profile>,
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
   ) {}
 
-  async create(createProfileDto: CreateProfileDto) {
-    const userProfile = this.profileRepository.create(createProfileDto);
+  async create(user: User, createProfileDto: CreateProfileDto) {
+    const department = await this.departmentRepository.findOne({
+      where: { id: createProfileDto.department_id },
+    });
+    if (!department) {
+      throw new NotFoundException('Department not found');
+    }
+    const userProfile = this.profileRepository.create({
+      ...omit(createProfileDto, ['department_id']),
+      department: department,
+      user: user,
+    });
     const result = await this.profileRepository.save(userProfile);
-    return {
-      result,
-    };
+    return omit(result, ['user']);
   }
 
   async findAll() {
