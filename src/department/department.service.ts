@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { omit } from 'lodash';
 import { Repository } from 'typeorm';
@@ -33,15 +37,23 @@ export class DepartmentService {
   }
 
   async findAll() {
-    const result = await this.departmentRepository.find();
+    const result = await this.departmentRepository.find({ relations: ['hod'] });
     return {
       result,
     };
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     //return `This action returns a #${id} profile`;
-    return this.departmentRepository.findOne(id);
+    const department = await this.departmentRepository.findOne({
+      where: { id: id },
+    });
+    if (!department) {
+      throw new NotFoundException('This department does not exist');
+    }
+    return {
+      Department: omit(department, ['isDeleted', 'createdOn', 'lastUpdatedOn']),
+    };
   }
 
   async update(id: number, updateDepartmentDto: UpdateDepartmentDto) {
@@ -57,6 +69,11 @@ export class DepartmentService {
         where: { id: updateDepartmentDto.hod },
       });
     }
+    if (!hod) {
+      throw new NotFoundException(
+        'This hod does not exist as a registered user',
+      );
+    }
     return await this.departmentRepository.update(
       { id: department.id },
       {
@@ -68,7 +85,10 @@ export class DepartmentService {
 
   async remove(id: number) {
     //return `This action removes a #${id} profile`;
-    const deleteDepartment = await this.findOne(id);
-    return this.departmentRepository.remove(deleteDepartment);
+    const profile = await this.departmentRepository.findOne({ id: id });
+    if (!profile) {
+      throw new ConflictException('Department does not exit');
+    }
+    return this.departmentRepository.delete(profile.id);
   }
 }

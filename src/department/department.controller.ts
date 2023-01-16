@@ -33,7 +33,7 @@ export class DepartmentController {
   constructor(private readonly departmentService: DepartmentService) {}
 
   @ApiCreatedResponse({
-    description: 'Password changed successfully',
+    description: 'Department created successfully',
     ...getGenericResponseSchema(Department),
   })
   @ApiExtraModels(Department)
@@ -51,24 +51,48 @@ export class DepartmentController {
     };
   }
 
-  @Get()
+  @ApiCreatedResponse({
+    description: 'Departments retrieved successfully',
+    ...getGenericResponseSchema(Department),
+  })
+  @ApiExtraModels(Department)
+  @ApiCookieAuth()
+  @ApiBadRequestResponse({ description: 'Bad request' })
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get('')
   async findAll() {
     const result = await this.departmentService.findAll();
     return {
-      message: 'Department Getall successfully',
+      message: 'Department retrieved successfully',
       results: { ...result },
     };
   }
 
+  @ApiCreatedResponse({
+    description: 'Department retrieved successfully',
+    ...getGenericResponseSchema(Department),
+  })
+  @ApiExtraModels(Department)
+  @ApiBadRequestResponse({ description: 'Bad request' })
+  @HttpCode(HttpStatus.OK)
+  @ApiCookieAuth()
+  @UseGuards(JwtAuthGuard)
   @Get('/:id')
   async findOne(@Param('id') id: string) {
     const result = await this.departmentService.findOne(+id);
     return {
-      message: 'Department Get byId successfully',
-      results: { ...result },
+      message: 'Department retrieved successfully',
+      results: result,
     };
   }
 
+  @ApiCreatedResponse({
+    description: 'Departments updated successfully',
+    ...getGenericResponseSchema(Department),
+  })
+  @ApiExtraModels(Department)
   @ApiCookieAuth()
   @Roles(UserRole.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -87,7 +111,14 @@ export class DepartmentController {
     };
   }
 
+  @ApiCreatedResponse({
+    description: 'Departments deleted successfully',
+    ...getGenericResponseSchema(Department),
+  })
+  @ApiExtraModels(Department)
   @ApiCookieAuth()
+  @ApiBadRequestResponse({ description: 'Bad request' })
+  @HttpCode(HttpStatus.OK)
   @Roles(UserRole.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete('/:id')

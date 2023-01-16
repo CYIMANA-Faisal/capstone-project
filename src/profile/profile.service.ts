@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { omit } from 'lodash';
+import { UserRole } from 'src/shared/enums/user-roles.enum';
 import { Repository } from 'typeorm';
 import { Department } from '../department/entities/department.entity';
 import { User } from '../users/entities/user.entity';
@@ -25,6 +26,7 @@ export class ProfileService {
     const department = await this.departmentRepository.findOne({
       where: { id: createProfileDto.department_id },
     });
+
     if (!department) {
       throw new NotFoundException('Department not found');
     }
@@ -38,27 +40,78 @@ export class ProfileService {
   }
 
   async findAll() {
-    const result = await this.profileRepository.find();
+    const result = await this.profileRepository.find({ relations: ['user'] });
     return {
       result,
     };
   }
 
-  findOne(id: number) {
+  async findOne(role: string, id: number) {
     //return `This action returns a #${id} profile`;
-    return this.profileRepository.findOne(id);
+
+    const profile = await this.profileRepository.findOne({
+      where: { id: id },
+      relations: ['user'],
+    });
+    if (!profile) {
+      throw new NotFoundException('This user profile does not exist');
+    }
+    if (role === 'admin') {
+      return {
+        Profile: omit(profile, [
+          'user',
+          'isDeleted',
+          'createdOn',
+          'lastUpdatedOn',
+        ]),
+        User: {
+          id: profile.user.id,
+          first_name: profile.user.first_name,
+          last_name: profile.user.last_name,
+          email: profile.user.email,
+          phone_number: profile.user.phone_number,
+        },
+      };
+    } else {
+      return {
+        Profile: {
+          id: profile.id,
+          position: profile.position,
+          starting_date: profile.starting_date,
+          profession: profile.profession,
+          salary: profile.salary,
+        },
+        User: {
+          id: profile.user.id,
+          first_name: profile.user.first_name,
+          last_name: profile.user.last_name,
+          email: profile.user.email,
+          phone_number: profile.user.phone_number,
+        },
+      };
+    }
   }
 
   async update(id: number, updateProfileDto: UpdateProfileDto) {
     //return `This action updates a #${id} profile`;
-    const userProfileById = await this.findOne(id);
-    if (!userProfileById) {
-      throw new ConflictException('Profile you want to update does not exit');
-    }
-    return this.profileRepository.save({
-      ...userProfileById,
-      ...updateProfileDto,
+    const userProfile = await this.profileRepository.findOne({ id: id });
+    const department = await this.departmentRepository.findOne({
+      where: { id: updateProfileDto.department_id },
     });
+    if (!userProfile) {
+      throw new ConflictException(
+        'The Profile you want to update does not exist',
+      );
+    }
+    if (!department) {
+      throw new ConflictException(
+        'The department you are adding does not exist',
+      );
+    }
+    return await this.profileRepository.update(
+      { id: id },
+      { ...omit(updateProfileDto, ['department_id']), department: department },
+    );
   }
 
   async remove(id: number) {
