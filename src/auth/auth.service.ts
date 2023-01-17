@@ -1,10 +1,11 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { SendGrindService } from '../notifications/sendgrid.service';
 import { User } from '../users/entities/user.entity';
@@ -60,7 +61,7 @@ export class AuthService {
         first_name: user.first_name,
         last_name: user.last_name,
         manager: null,
-        role: UserRole.STANDARD,
+        role: user.role,
       });
       const verificationCode = codeGenerator();
       await this.verificationCodeRepository.save({
@@ -293,5 +294,13 @@ export class AuthService {
       { id: user.id },
       { password: await this.bcryptService.hash(psdDto.newPassword) },
     );
+  }
+  async logout(id:number){
+  const updateToken=await this.userRepository.update(
+    {id:id,
+    currentHashedRefreshToken:Not(IsNull()) },
+    {currentHashedRefreshToken:null}
+  );
+  return updateToken;
   }
 }

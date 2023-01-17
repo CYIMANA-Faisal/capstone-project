@@ -93,6 +93,15 @@ export class ProfileController {
       results: result,
     };
   }
+  
+  @ApiCreatedResponse({
+    description: 'User Profile',
+    ...getGenericResponseSchema(Profile),
+  })
+  @ApiExtraModels(Profile)
+  @ApiConflictResponse({ description: 'Unable to update the user profile' })
+  @ApiBadRequestResponse({ description: 'Bad request' })
+  @HttpCode(HttpStatus.OK)
   @ApiCookieAuth()
   @UseGuards(JwtAuthGuard)
   @Patch('/:id')
@@ -106,6 +115,7 @@ export class ProfileController {
       results: { ...result },
     };
   }
+
   @ApiCreatedResponse({
     description: 'User Profile',
     ...getGenericResponseSchema(Profile),

@@ -186,4 +186,27 @@ export class AuthController {
       results: null,
     };
   }
+
+  @ApiCreatedResponse({
+    description: 'Logout successful',
+    ...getGenericResponseSchema(User),
+  })
+  @ApiExtraModels(User)
+  @ApiBadRequestResponse({ description: 'Bad request' })
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCookieAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('/logout')
+  async logout(
+    @GetUser() user: User,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<GenericResponse<any>> {
+    const results = await this.authService.logout(user.id);
+    response.clearCookie('accessToken');
+    response.clearCookie('refreshToken');
+    return {
+      message: 'Logout successful',
+      results: {results},
+    };
+  }
 }
