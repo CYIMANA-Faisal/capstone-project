@@ -83,4 +83,9 @@ export class CreateProfileDto {
   @IsString()
   @IsNotEmpty()
   province: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  user_id: number;
 }

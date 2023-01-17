@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { omit } from 'lodash';
@@ -29,15 +30,18 @@ export class ProfileService {
 
     if (!department) {
       throw new NotFoundException('Department not found');
+    }if(user.id===createProfileDto.user_id){
+      const userProfile = this.profileRepository.create({
+        ...omit(createProfileDto, ['department_id']),
+        department: department,
+        user: user,
+      });
+      const result = await this.profileRepository.save(userProfile);
+      return omit(result, ['user']);
+    }else{
+      throw new UnauthorizedException('it seems you are not logged in');
     }
-    const userProfile = this.profileRepository.create({
-      ...omit(createProfileDto, ['department_id']),
-      department: department,
-      user: user,
-    });
-    const result = await this.profileRepository.save(userProfile);
-    return omit(result, ['user']);
-  }
+    }
 
   async findAll() {
     const result = await this.profileRepository.find({ relations: ['user'] });
